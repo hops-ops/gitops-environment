@@ -1,0 +1,112 @@
+# code: language=yaml
+
+{{- $xr := getCompositeResource . }}
+{{- $spec := $xr.spec }}
+{{- $name := $xr.metadata.name }}
+
+{{- $managementPolicies := $spec.managementPolicies | default (list "*") }}
+{{- $nonDeletingManagementPolicies := list }}
+{{- if has "*" $managementPolicies }}
+  {{- $nonDeletingManagementPolicies = list "Observe" "Create" "Update" "LateInitialize" }}
+{{- else }}
+  {{- range $policy := $managementPolicies }}
+    {{- if ne $policy "Delete" }}
+      {{- $nonDeletingManagementPolicies = append $nonDeletingManagementPolicies $policy }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+{{- $defaultLabels := dict
+  "hops.ops.com.ai/managed" "true"
+  "hops.ops.com.ai/gitopsenvironment" $name
+}}
+{{- $labels := mergeOverwrite (dict) $defaultLabels ($spec.labels | default dict) }}
+
+{{- $providerRefs := $spec.providerConfigRefs | default dict }}
+{{- $githubProviderRef := $providerRefs.github | default dict }}
+{{- $kubernetesProviderRef := $providerRefs.kubernetes | default dict }}
+
+{{- $namespaceSpec := $spec.namespace }}
+{{- $namespaceAllowDelete := false }}
+{{- if hasKey $namespaceSpec "allowDelete" }}
+  {{- $namespaceAllowDelete = $namespaceSpec.allowDelete }}
+{{- end }}
+{{- $namespaceLabels := mergeOverwrite (dict) $labels ($namespaceSpec.labels | default dict) }}
+
+{{- $repositorySpec := $spec.repository }}
+{{- $repositoryAllowDelete := false }}
+{{- if hasKey $repositorySpec "allowDelete" }}
+  {{- $repositoryAllowDelete = $repositorySpec.allowDelete }}
+{{- end }}
+{{- $repositoryAutoInit := true }}
+{{- if hasKey $repositorySpec "autoInit" }}
+  {{- $repositoryAutoInit = $repositorySpec.autoInit }}
+{{- end }}
+{{- $repositoryDeleteBranchOnMerge := true }}
+{{- if hasKey $repositorySpec "deleteBranchOnMerge" }}
+  {{- $repositoryDeleteBranchOnMerge = $repositorySpec.deleteBranchOnMerge }}
+{{- end }}
+
+{{- $webhookSpec := $spec.webhook | default dict }}
+{{- $webhookEnabled := true }}
+{{- if hasKey $webhookSpec "enabled" }}
+  {{- $webhookEnabled = $webhookSpec.enabled }}
+{{- end }}
+{{- $webhookSecretRef := $webhookSpec.secretRef | default dict }}
+
+{{- $applicationSpec := $spec.application | default dict }}
+{{- $applicationNamespace := $applicationSpec.namespace | default "argocd" }}
+{{- $applicationDestination := $applicationSpec.destination | default dict }}
+
+{{- $state := dict
+  "name" $name
+  "managementPolicies" $managementPolicies
+  "nonDeletingManagementPolicies" $nonDeletingManagementPolicies
+  "labels" $labels
+  "githubProviderConfigRef" (dict
+    "name" ($githubProviderRef.name | default "default")
+    "kind" ($githubProviderRef.kind | default "ProviderConfig")
+  )
+  "kubernetesProviderConfigRef" (dict
+    "name" ($kubernetesProviderRef.name | default "default")
+    "kind" ($kubernetesProviderRef.kind | default "ProviderConfig")
+  )
+  "namespace" (dict
+    "name" $namespaceSpec.name
+    "labels" $namespaceLabels
+    "managementPolicies" (ternary $managementPolicies $nonDeletingManagementPolicies $namespaceAllowDelete)
+  )
+  "repository" (dict
+    "owner" $repositorySpec.owner
+    "name" $repositorySpec.name
+    "externalName" ($repositorySpec.externalName | default "")
+    "description" ($repositorySpec.description | default (printf "GitOps environment %s" $name))
+    "visibility" ($repositorySpec.visibility | default "private")
+    "managementPolicies" (ternary $managementPolicies $nonDeletingManagementPolicies $repositoryAllowDelete)
+    "autoInit" $repositoryAutoInit
+    "deleteBranchOnMerge" $repositoryDeleteBranchOnMerge
+    "topics" ($repositorySpec.topics | default list)
+    "template" ($repositorySpec.template | default dict)
+    "url" (printf "https://github.com/%s/%s.git" $repositorySpec.owner $repositorySpec.name)
+  )
+  "webhook" (dict
+    "enabled" $webhookEnabled
+    "events" ($webhookSpec.events | default (list "push"))
+    "secretRef" (dict
+      "name" ($webhookSecretRef.name | default "gitops-github-webhook")
+      "urlKey" ($webhookSecretRef.urlKey | default "url")
+      "secretKey" ($webhookSecretRef.secretKey | default "secret")
+    )
+  )
+  "application" (dict
+    "name" ($applicationSpec.name | default (printf "gitops-environment-%s" $name))
+    "namespace" $applicationNamespace
+    "project" ($applicationSpec.project | default "default")
+    "path" ($applicationSpec.path | default ".gitops/deploy/helm")
+    "targetRevision" ($applicationSpec.targetRevision | default "main")
+    "destination" (dict
+      "server" ($applicationDestination.server | default "https://kubernetes.default.svc")
+      "namespace" ($applicationDestination.namespace | default $applicationNamespace)
+    )
+  )
+}}

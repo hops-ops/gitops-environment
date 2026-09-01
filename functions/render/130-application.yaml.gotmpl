@@ -1,0 +1,41 @@
+# code: language=yaml
+
+---
+apiVersion: kubernetes.m.crossplane.io/v1alpha1
+kind: Object
+metadata:
+  name: {{ $state.name }}-application
+  annotations:
+    {{ setResourceNameAnnotation "application" }}
+  labels: {{ $state.labels | toJson }}
+spec:
+  managementPolicies: {{ $state.managementPolicies | toJson }}
+  forProvider:
+    manifest:
+      apiVersion: argoproj.io/v1alpha1
+      kind: Application
+      metadata:
+        name: {{ $state.application.name }}
+        namespace: {{ $state.application.namespace }}
+        labels: {{ $state.labels | toJson }}
+      spec:
+        project: {{ $state.application.project }}
+        source:
+          repoURL: {{ $state.repository.url }}
+          targetRevision: {{ $state.application.targetRevision }}
+          path: {{ $state.application.path }}
+        destination:
+          server: {{ $state.application.destination.server }}
+          namespace: {{ $state.application.destination.namespace }}
+        syncPolicy:
+          automated:
+            allowEmpty: true
+            prune: true
+            selfHeal: true
+          syncOptions:
+            - ApplyOutOfSyncOnly=true
+            - PruneLast=true
+  providerConfigRef:
+    name: {{ $state.kubernetesProviderConfigRef.name }}
+    kind: {{ $state.kubernetesProviderConfigRef.kind }}
+

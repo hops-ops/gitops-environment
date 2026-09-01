@@ -1,0 +1,57 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard"
+  ],
+  "crossplane": {
+    "managerFilePatterns": [
+      "/\\.yaml$/",
+      "/\\.yaml\\.gotmpl$/"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "Automerge minor and patch updates that pass all checks",
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    },
+    {
+      "description": "Disable Docker updates for hops-ops packages tracked through GitHub releases",
+      "matchDatasources": ["docker"],
+      "enabled": false,
+      "matchPackageNames": ["/^hops-ops//"]
+    },
+    {
+      "description": "Use feat(deps) for Crossplane package updates",
+      "matchManagers": ["custom.regex"],
+      "semanticCommitType": "feat",
+      "semanticCommitScope": "deps"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "hops-ops Crossplane configurations tracked through GitHub releases",
+      "managerFilePatterns": ["upbound.yaml"],
+      "matchStrings": [
+        "\\s*(configuration|function|package|provider):\\s*ghcr\\.io/hops-ops/(?<depName>.*?)\\s*version:\\s*(\"|')>=(?<currentValue>.*?)(\"|')\\s*"
+      ],
+      "datasourceTemplate": "github-releases",
+      "packageNameTemplate": "hops-ops/{{depName}}"
+    },
+    {
+      "customType": "regex",
+      "description": "Crossplane packages from other registries",
+      "managerFilePatterns": ["upbound.yaml"],
+      "matchStrings": [
+        "\\s*(configuration|function|package|provider):\\s*(?<registryUrl>[^/]+)\\/(?<orgName>[^/]+)\\/(?<repoName>[^/\\s]+)\\s*version:\\s*(\"|')>=(?<currentValue>.*?)(\"|')\\s*"
+      ],
+      "datasourceTemplate": "docker",
+      "registryUrlTemplate": "https://{{registryUrl}}",
+      "depNameTemplate": "{{orgName}}/{{repoName}}",
+      "packageNameTemplate": "{{orgName}}/{{repoName}}"
+    }
+  ]
+}
+

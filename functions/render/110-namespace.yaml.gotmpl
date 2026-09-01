@@ -1,0 +1,23 @@
+# code: language=yaml
+
+---
+apiVersion: kubernetes.m.crossplane.io/v1alpha1
+kind: Object
+metadata:
+  name: {{ $state.name }}-namespace
+  annotations:
+    {{ setResourceNameAnnotation "namespace" }}
+  labels: {{ $state.labels | toJson }}
+spec:
+  managementPolicies: {{ $state.namespace.managementPolicies | toJson }}
+  forProvider:
+    manifest:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: {{ $state.namespace.name }}
+        labels: {{ $state.namespace.labels | toJson }}
+  providerConfigRef:
+    name: {{ $state.kubernetesProviderConfigRef.name }}
+    kind: {{ $state.kubernetesProviderConfigRef.kind }}
+

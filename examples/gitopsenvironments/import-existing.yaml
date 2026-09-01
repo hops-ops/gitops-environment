@@ -1,0 +1,27 @@
+apiVersion: hops.ops.com.ai/v1alpha1
+kind: GitopsEnvironment
+metadata:
+  name: staging
+  namespace: production
+spec:
+  providerConfigRefs:
+    github:
+      name: github
+      kind: ProviderConfig
+    kubernetes:
+      name: production
+      kind: ProviderConfig
+  namespace:
+    name: staging
+    labels:
+      gitkb.com/environment: staging
+  repository:
+    owner: gitkb
+    name: gitkb-staging-env
+    externalName: gitkb-staging-env
+  webhook:
+    secretRef:
+      name: gitops-github-webhook
+  application:
+    name: gitkb-environment-staging
+

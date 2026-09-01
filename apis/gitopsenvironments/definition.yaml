@@ -1,0 +1,234 @@
+apiVersion: apiextensions.crossplane.io/v2
+kind: CompositeResourceDefinition
+metadata:
+  name: gitopsenvironments.hops.ops.com.ai
+spec:
+  group: hops.ops.com.ai
+  names:
+    kind: GitopsEnvironment
+    plural: gitopsenvironments
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      referenceable: true
+      served: true
+      schema:
+        openAPIV3Schema:
+          description: GitopsEnvironment registers a workload environment with GitHub and Argo CD.
+          type: object
+          properties:
+            spec:
+              description: GitopsEnvironmentSpec defines the repository, namespace, webhook, and Argo CD Application for an environment.
+              type: object
+              required:
+                - namespace
+                - repository
+              properties:
+                managementPolicies:
+                  description: Management policies for composed resources. Repository and Namespace deletion are additionally disabled by default.
+                  type: array
+                  default:
+                    - "*"
+                  items:
+                    type: string
+                labels:
+                  description: Labels applied to all composed and target Kubernetes resources. Values override the standard Hops labels.
+                  type: object
+                  additionalProperties:
+                    type: string
+                  x-kubernetes-preserve-unknown-fields: true
+                providerConfigRefs:
+                  description: Namespaced provider configurations used to manage GitHub and the target Kubernetes cluster.
+                  type: object
+                  properties:
+                    github:
+                      description: Reference to a namespaced or cluster-scoped GitHub ProviderConfig.
+                      type: object
+                      properties:
+                        name:
+                          description: ProviderConfig name. Defaults to default.
+                          type: string
+                        kind:
+                          description: ProviderConfig kind. Defaults to ProviderConfig.
+                          type: string
+                          enum:
+                            - ProviderConfig
+                            - ClusterProviderConfig
+                    kubernetes:
+                      description: Reference to a namespaced or cluster-scoped ProviderConfig.
+                      type: object
+                      properties:
+                        name:
+                          description: ProviderConfig name. Defaults to default.
+                          type: string
+                        kind:
+                          description: ProviderConfig kind. Defaults to ProviderConfig.
+                          type: string
+                          enum:
+                            - ProviderConfig
+                            - ClusterProviderConfig
+                namespace:
+                  description: Workload namespace owned by this environment registration.
+                  type: object
+                  required:
+                    - name
+                  properties:
+                    name:
+                      description: Kubernetes namespace used by workloads promoted into this environment.
+                      type: string
+                      minLength: 1
+                      maxLength: 63
+                    allowDelete:
+                      description: Allow Crossplane to delete the namespace when the XR is deleted. Defaults to false.
+                      type: boolean
+                      default: false
+                    labels:
+                      description: Additional labels applied to the target Namespace.
+                      type: object
+                      additionalProperties:
+                        type: string
+                      x-kubernetes-preserve-unknown-fields: true
+                repository:
+                  description: GitHub repository containing the environment app-of-apps chart.
+                  type: object
+                  required:
+                    - owner
+                    - name
+                  x-kubernetes-validations:
+                    - rule: "!has(self.externalName) || !has(self.template)"
+                      message: repository.externalName and repository.template are mutually exclusive
+                    - rule: "!has(self.externalName) || !has(self.allowDelete) || !self.allowDelete"
+                      message: imported repositories cannot enable deletion
+                  properties:
+                    owner:
+                      description: GitHub organization owning the repository. It must match the GitHub ProviderConfig owner.
+                      type: string
+                      minLength: 1
+                    name:
+                      description: GitHub repository name and Crossplane managed-resource name.
+                      type: string
+                      minLength: 1
+                    externalName:
+                      description: Existing GitHub repository name to import. Omit to create a repository.
+                      type: string
+                      minLength: 1
+                    description:
+                      description: Repository description. Defaults to a description based on the environment name.
+                      type: string
+                    visibility:
+                      description: Repository visibility. Defaults to private.
+                      type: string
+                      default: private
+                      enum:
+                        - public
+                        - private
+                        - internal
+                    allowDelete:
+                      description: Allow Crossplane to delete a newly created repository when the XR is deleted. Defaults to false and cannot be enabled for imports.
+                      type: boolean
+                      default: false
+                    autoInit:
+                      description: Create an initial README when creating without a template. Defaults to true.
+                      type: boolean
+                      default: true
+                    deleteBranchOnMerge:
+                      description: Delete branches after pull requests merge. Defaults to true.
+                      type: boolean
+                      default: true
+                    topics:
+                      description: GitHub topics applied to the repository.
+                      type: array
+                      items:
+                        type: string
+                    template:
+                      description: Template repository used only when creating a repository.
+                      type: object
+                      required:
+                        - owner
+                        - repository
+                      properties:
+                        owner:
+                          description: Template repository owner.
+                          type: string
+                        repository:
+                          description: Template repository name.
+                          type: string
+                webhook:
+                  description: Authenticated GitHub push webhook that asks Argo CD to refresh immediately.
+                  type: object
+                  properties:
+                    enabled:
+                      description: Create the repository webhook. Defaults to true.
+                      type: boolean
+                      default: true
+                    events:
+                      description: GitHub events delivered to Argo CD. Defaults to push.
+                      type: array
+                      items:
+                        type: string
+                    secretRef:
+                      description: Secret in the XR namespace containing the webhook URL and shared secret.
+                      type: object
+                      properties:
+                        name:
+                          description: Secret name. Defaults to gitops-github-webhook.
+                          type: string
+                        urlKey:
+                          description: Key containing the webhook URL. Defaults to url.
+                          type: string
+                        secretKey:
+                          description: Key containing the webhook shared secret. Defaults to secret.
+                          type: string
+                application:
+                  description: Root Argo CD Application that syncs the environment repository.
+                  type: object
+                  properties:
+                    name:
+                      description: Application name. Defaults to gitops-environment-{XR name}.
+                      type: string
+                    namespace:
+                      description: Namespace containing the Argo CD Application. Defaults to argocd.
+                      type: string
+                    project:
+                      description: Argo CD project. Defaults to default.
+                      type: string
+                    path:
+                      description: Source path containing the environment app-of-apps chart. Defaults to .gitops/deploy/helm.
+                      type: string
+                    targetRevision:
+                      description: Git revision synced by Argo CD. Defaults to main.
+                      type: string
+                    destination:
+                      description: Cluster and namespace where the environment chart is rendered.
+                      type: object
+                      properties:
+                        server:
+                          description: Kubernetes API server URL. Defaults to the in-cluster API.
+                          type: string
+                        namespace:
+                          description: Destination namespace for the environment chart. Defaults to the Application namespace.
+                          type: string
+            status:
+              description: GitopsEnvironmentStatus exposes stable identities for downstream consumers.
+              type: object
+              properties:
+                namespace:
+                  description: Workload namespace managed by the environment.
+                  type: string
+                repository:
+                  description: Environment repository information.
+                  type: object
+                  properties:
+                    url:
+                      description: HTTPS clone URL for the environment repository.
+                      type: string
+                application:
+                  description: Argo CD Application information.
+                  type: object
+                  properties:
+                    name:
+                      description: Argo CD Application name.
+                      type: string
+                    namespace:
+                      description: Namespace containing the Argo CD Application.
+                      type: string

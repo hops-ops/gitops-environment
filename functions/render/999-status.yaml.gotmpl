@@ -1,0 +1,14 @@
+# code: language=yaml
+
+{{- $xr := getCompositeResource . }}
+---
+apiVersion: {{ $xr.apiVersion }}
+kind: {{ $xr.kind }}
+status:
+  namespace: {{ $state.namespace.name }}
+  repository:
+    url: {{ $state.repository.url }}
+  application:
+    name: {{ $state.application.name }}
+    namespace: {{ $state.application.namespace }}
+

@@ -1,0 +1,38 @@
+# code: language=yaml
+
+{{- $repository := $state.repository }}
+---
+apiVersion: repo.github.m.upbound.io/v1alpha1
+kind: Repository
+metadata:
+  name: {{ $repository.name }}
+  annotations:
+    {{ setResourceNameAnnotation "repository" }}
+    {{- if $repository.externalName }}
+    crossplane.io/external-name: {{ $repository.externalName | quote }}
+    {{- end }}
+  labels: {{ $state.labels | toJson }}
+spec:
+  managementPolicies: {{ $repository.managementPolicies | toJson }}
+  forProvider:
+    name: {{ $repository.name }}
+    description: {{ $repository.description | quote }}
+    visibility: {{ $repository.visibility }}
+    hasIssues: true
+    {{- with $repository.topics }}
+    topics: {{ . | toJson }}
+    {{- end }}
+  initProvider:
+    deleteBranchOnMerge: {{ $repository.deleteBranchOnMerge }}
+    {{- if $repository.template.repository }}
+    template:
+      - owner: {{ $repository.template.owner }}
+        repository: {{ $repository.template.repository }}
+        includeAllBranches: false
+    {{- else }}
+    autoInit: {{ $repository.autoInit }}
+    {{- end }}
+  providerConfigRef:
+    name: {{ $state.githubProviderConfigRef.name }}
+    kind: {{ $state.githubProviderConfigRef.kind }}
+

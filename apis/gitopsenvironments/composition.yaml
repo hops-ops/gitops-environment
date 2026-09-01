@@ -1,0 +1,17 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: gitopsenvironments.hops.ops.com.ai
+spec:
+  compositeTypeRef:
+    apiVersion: hops.ops.com.ai/v1alpha1
+    kind: GitopsEnvironment
+  mode: Pipeline
+  pipeline:
+    - step: render
+      functionRef:
+        name: hops-ops-gitops-environmentrender
+    - step: auto-ready
+      functionRef:
+        name: crossplane-contrib-function-auto-ready
+

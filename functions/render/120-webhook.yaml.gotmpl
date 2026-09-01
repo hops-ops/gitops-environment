@@ -1,0 +1,32 @@
+# code: language=yaml
+
+{{- if $state.webhook.enabled }}
+---
+apiVersion: repo.github.m.upbound.io/v1alpha1
+kind: RepositoryWebhook
+metadata:
+  name: {{ $state.repository.name }}
+  annotations:
+    {{ setResourceNameAnnotation "repository-webhook" }}
+  labels: {{ $state.labels | toJson }}
+spec:
+  managementPolicies: {{ $state.managementPolicies | toJson }}
+  forProvider:
+    active: true
+    events: {{ $state.webhook.events | toJson }}
+    repositoryRef:
+      name: {{ $state.repository.name }}
+    configuration:
+      - contentType: json
+        insecureSsl: false
+        urlSecretRef:
+          name: {{ $state.webhook.secretRef.name }}
+          key: {{ $state.webhook.secretRef.urlKey }}
+        secretSecretRef:
+          name: {{ $state.webhook.secretRef.name }}
+          key: {{ $state.webhook.secretRef.secretKey }}
+  providerConfigRef:
+    name: {{ $state.githubProviderConfigRef.name }}
+    kind: {{ $state.githubProviderConfigRef.kind }}
+{{- end }}
+
