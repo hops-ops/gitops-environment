@@ -21,7 +21,6 @@ spec:
               description: GitopsEnvironmentSpec defines the repository, namespace, webhook, and Argo CD Application for an environment.
               type: object
               required:
-                - namespace
                 - repository
               properties:
                 managementPolicies:
@@ -68,7 +67,7 @@ spec:
                             - ProviderConfig
                             - ClusterProviderConfig
                 namespace:
-                  description: Workload namespace owned by this environment registration.
+                  description: Optional workload namespace owned by this environment registration. Omit for environments such as preview repositories that manage dynamic namespaces.
                   type: object
                   required:
                     - name

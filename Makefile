@@ -22,7 +22,8 @@ generate-configuration:
 # Keep this list synchronized with both validation workflows.
 EXAMPLES := \
 	examples/gitopsenvironments/import-existing.yaml:: \
-	examples/gitopsenvironments/from-template.yaml::
+	examples/gitopsenvironments/from-template.yaml:: \
+	examples/gitopsenvironments/shared-preview.yaml::
 
 render\:all:
 	@tmpdir=$$(mktemp -d); \
@@ -98,4 +99,3 @@ test:
 publish:
 	@if [ -z "$(tag)" ]; then echo "Error: tag is not set. Usage: make publish tag=<version>"; exit 1; fi
 	up project build --push --tag $(tag)
-

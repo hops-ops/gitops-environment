@@ -26,7 +26,8 @@
 {{- $githubProviderRef := $providerRefs.github | default dict }}
 {{- $kubernetesProviderRef := $providerRefs.kubernetes | default dict }}
 
-{{- $namespaceSpec := $spec.namespace }}
+{{- $namespaceEnabled := hasKey $spec "namespace" }}
+{{- $namespaceSpec := $spec.namespace | default dict }}
 {{- $namespaceAllowDelete := false }}
 {{- if hasKey $namespaceSpec "allowDelete" }}
   {{- $namespaceAllowDelete = $namespaceSpec.allowDelete }}
@@ -72,7 +73,8 @@
     "kind" ($kubernetesProviderRef.kind | default "ProviderConfig")
   )
   "namespace" (dict
-    "name" $namespaceSpec.name
+    "enabled" $namespaceEnabled
+    "name" ($namespaceSpec.name | default "")
     "labels" $namespaceLabels
     "managementPolicies" (ternary $managementPolicies $nonDeletingManagementPolicies $namespaceAllowDelete)
   )

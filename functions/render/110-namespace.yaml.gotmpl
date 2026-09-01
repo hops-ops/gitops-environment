@@ -1,5 +1,6 @@
 # code: language=yaml
 
+{{- if $state.namespace.enabled }}
 ---
 apiVersion: kubernetes.m.crossplane.io/v1alpha1
 kind: Object
@@ -20,4 +21,4 @@ spec:
   providerConfigRef:
     name: {{ $state.kubernetesProviderConfigRef.name }}
     kind: {{ $state.kubernetesProviderConfigRef.kind }}
-
+{{- end }}

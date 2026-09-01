@@ -76,6 +76,10 @@ Repository and Namespace deletion remain disabled unless their respective
 `allowDelete` fields are explicitly set. `allowDelete` is rejected for an
 imported repository.
 
+For a shared preview repository that creates a namespace per pull request,
+omit `spec.namespace`. The XR then owns the repository, webhook, and root
+Application without creating an unused static Namespace.
+
 ### Stage 3: Customize synchronization
 
 The default Application syncs `.gitops/deploy/helm` from `main` into `argocd`.
@@ -138,4 +142,3 @@ make build
 ## License
 
 Apache-2.0
-

@@ -31,7 +31,8 @@ jobs:
       examples: |
         [
           { "example": "examples/gitopsenvironments/import-existing.yaml" },
-          { "example": "examples/gitopsenvironments/from-template.yaml" }
+          { "example": "examples/gitopsenvironments/from-template.yaml" },
+          { "example": "examples/gitopsenvironments/shared-preview.yaml" }
         ]
       api_path: apis/gitopsenvironments
       error_on_missing_schemas: true
@@ -47,4 +48,3 @@ jobs:
     secrets: inherit
     with:
       tag: pr-${{ github.event.pull_request.number }}-${{ github.sha }}
-

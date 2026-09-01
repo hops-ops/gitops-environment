@@ -27,7 +27,8 @@ jobs:
       examples: |
         [
           { "example": "examples/gitopsenvironments/import-existing.yaml" },
-          { "example": "examples/gitopsenvironments/from-template.yaml" }
+          { "example": "examples/gitopsenvironments/from-template.yaml" },
+          { "example": "examples/gitopsenvironments/shared-preview.yaml" }
         ]
       api_path: apis/gitopsenvironments
       error_on_missing_schemas: true
@@ -45,4 +46,3 @@ jobs:
       DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
     with:
       useDeployKey: true
-

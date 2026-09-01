@@ -33,6 +33,24 @@ _base_xr = {
     }
 }
 
+_preview_xr = {
+    apiVersion = "hops.ops.com.ai/v1alpha1"
+    kind = "GitopsEnvironment"
+    metadata = {
+        name = "preview"
+        namespace = "production"
+    }
+    spec = {
+        providerConfigRefs = _base_xr.spec.providerConfigRefs
+        repository = {
+            owner = "gitkb"
+            name = "gitkb-preview-envs"
+            externalName = "gitkb-preview-envs"
+        }
+        application.name = "gitkb-preview-envs"
+    }
+}
+
 items = [
     metav1alpha1.CompositionTest {
         metadata.name = "imports-existing-environment-with-safe-ownership"
@@ -207,6 +225,35 @@ items = [
                         metadata.name = "gitkb-environment-development"
                         spec.project = "workloads"
                     }
+                }
+            ]
+        }
+    }
+
+    metav1alpha1.CompositionTest {
+        metadata.name = "shared-preview-renders-without-a-static-namespace"
+        spec = {
+            compositionPath = "apis/gitopsenvironments/composition.yaml"
+            xrdPath = "apis/gitopsenvironments/definition.yaml"
+            timeoutSeconds = 60
+            validate = False
+            xr = _preview_xr
+            assertResources = [
+                {
+                    apiVersion = "repo.github.m.upbound.io/v1alpha1"
+                    kind = "Repository"
+                    metadata.name = "gitkb-preview-envs"
+                }
+                {
+                    apiVersion = "repo.github.m.upbound.io/v1alpha1"
+                    kind = "RepositoryWebhook"
+                    metadata.name = "gitkb-preview-envs"
+                }
+                {
+                    apiVersion = "kubernetes.m.crossplane.io/v1alpha1"
+                    kind = "Object"
+                    metadata.name = "preview-application"
+                    spec.forProvider.manifest.metadata.name = "gitkb-preview-envs"
                 }
             ]
         }

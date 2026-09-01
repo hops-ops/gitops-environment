@@ -5,10 +5,11 @@
 apiVersion: {{ $xr.apiVersion }}
 kind: {{ $xr.kind }}
 status:
+  {{- if $state.namespace.enabled }}
   namespace: {{ $state.namespace.name }}
+  {{- end }}
   repository:
     url: {{ $state.repository.url }}
   application:
     name: {{ $state.application.name }}
     namespace: {{ $state.application.namespace }}
-
