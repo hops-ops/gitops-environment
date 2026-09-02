@@ -253,6 +253,7 @@ items = [
                     apiVersion = "kubernetes.m.crossplane.io/v1alpha1"
                     kind = "Object"
                     metadata.name = "preview-application"
+                    spec.watch = True
                     spec.forProvider.manifest.metadata.name = "gitkb-preview-envs"
                 }
             ]

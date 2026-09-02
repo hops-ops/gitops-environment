@@ -10,6 +10,7 @@ metadata:
   labels: {{ $state.labels | toJson }}
 spec:
   managementPolicies: {{ $state.managementPolicies | toJson }}
+  watch: true
   forProvider:
     manifest:
       apiVersion: argoproj.io/v1alpha1
@@ -38,4 +39,3 @@ spec:
   providerConfigRef:
     name: {{ $state.kubernetesProviderConfigRef.name }}
     kind: {{ $state.kubernetesProviderConfigRef.kind }}
-
