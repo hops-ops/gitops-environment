@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   validate:
-    uses: hops-ops/workflows-crossplane/.github/workflows/validate.yaml@v3.0.0
+    uses: hops-ops/workflows-crossplane/.github/workflows/validate.yaml@v3.2.0
     with:
       examples: |
         [
@@ -34,7 +34,7 @@ jobs:
       error_on_missing_schemas: true
 
   test:
-    uses: hops-ops/workflows-crossplane/.github/workflows/test.yaml@v3.0.0
+    uses: hops-ops/workflows-crossplane/.github/workflows/test.yaml@v3.2.0
 
   version-and-tag:
     name: Version and Tag
