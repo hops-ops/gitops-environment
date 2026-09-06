@@ -15,7 +15,7 @@ spec:
   - apiVersion: pkg.crossplane.io/v1
     kind: Provider
     package: xpkg.crossplane.io/crossplane-contrib/provider-upjet-github
-    version: '>=v0.19.0'
+    version: '>=v0.19.1'
   description: Registers a GitOps workload environment by composing its GitHub repository,
     Kubernetes namespace, authenticated Argo CD webhook, and root Application.
   license: Apache-2.0
